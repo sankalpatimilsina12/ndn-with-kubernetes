@@ -13,3 +13,8 @@ to the data lake.
 to understand the computing requirements. The gateway node will then build a kubernetes node with the specified
 requirements and route the interest to the newly created node. The newly created node will then run the compute
 job and return the result to the gateway node.
+
+
+
+# nfd: ENTRYPOINT /usr/bin/nfd -c $CONFIG > $LOG_FILE 2>&1 & tail -f /dev/null
+# ndn6tools: ENTRYPOINT sleep 5 && /usr/bin/ndn6-file-server /ndn/k8s/data /fileserver_data > $LOG_FILE 2>&1

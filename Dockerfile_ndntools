@@ -1,0 +1,24 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y -qq update
+RUN apt-get -y -qq --no-install-recommends install git build-essential nano curl vim wget iperf3 traceroute iputils-ping ca-certificates gnupg2
+RUN echo "deb [arch=amd64 trusted=yes] https://nfd-nightly-apt.ndn.today/ubuntu focal main" | tee /etc/apt/sources.list.d/nfd-nightly.list
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+RUN apt-get -y -qq update
+RUN apt-get -y -qq --no-install-recommends install -f kubectl libndn-cxx-dev nfd ndnchunks ndnsec ndnping ndnpeek
+RUN rm -rf /var/lib/apt/lists/*
+RUN cp /etc/ndn/nfd.conf.sample /etc/ndn/nfd.conf
+RUN ndnsec key-gen /`whoami` | ndnsec cert-install -
+RUN mkdir -p /etc/ndn/keys
+RUN mkdir -p /share
+RUN mkdir -p /workspace
+RUN ndnsec cert-dump -i /`whoami` > default.ndncert
+RUN mv default.ndncert /etc/ndn/keys/default.ndncert
+RUN setcap -r /usr/bin/nfd || true
+
+EXPOSE 6363/tcp
+EXPOSE 6363/udp
+WORKDIR /workspace
