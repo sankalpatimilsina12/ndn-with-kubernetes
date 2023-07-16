@@ -1,0 +1,36 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: gw
+  namespace: ndnk8s
+spec:
+  type: NodePort
+  selector:
+    app: gw
+  ports:
+    - port: 6363
+      targetPort: 6363
+      protocol: UDP
+      nodePort: 30007
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gw
+  namespace: ndnk8s
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gw
+  template:
+    metadata:
+      labels:
+        app: gw
+    spec:
+      containers:
+        - name: router
+          image: sankalpatimilsina/ndn-tools:latest
+          imagePullPolicy: IfNotPresent

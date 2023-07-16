@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dl
+  namespace: ndnk8s
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dl
+  template:
+    metadata:
+      labels:
+        app: dl
+    spec:
+      volumes:
+        - name: run-ndn
+          hostPath:
+            path: /run/ndn
+      containers:
+        - name: nfd
+          image: sankalpatimilsina/ndn-tools:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["SYS_PTRACE"]
+          volumeMounts:
+            - mountPath: /run/ndn
+              name: run-ndn
+        - name: ndn6fs
+          image: sankalpatimilsina/ndn6tools:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["SYS_PTRACE"]
+          volumeMounts:
+            - mountPath: /run/ndn
+              name: run-ndn
+
