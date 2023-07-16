@@ -1,0 +1,14 @@
+kind: Node
+apiVersion: v1
+metadata:
+  name: ndn-dpdk-server
+  labels:
+    nodevm: router-node
+
+---
+kind: Node
+apiVersion: v1
+metadata:
+  name: ndn-dpdk-client
+  labels:
+    nodevm: fw-fs-node

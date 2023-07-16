@@ -4,11 +4,13 @@ from enum import Enum
 
 DEBUG = True
 
+
 class SUPPORTED_APP_PARAMS(Enum):
     MEM = 1
     CPU = 2
     DISK = 3
     DOCKER = 4
+
 
 # LOG
 LOGGER = logging.getLogger('NDN_K8S')
@@ -20,3 +22,9 @@ _console_handler.setFormatter(logging.Formatter(
 ))
 LOGGER.addHandler(_console_handler)
 LOGGER.propagate = False
+
+# PREFIXES
+GATEWAY_ROUTES = {
+    'DEPLOYMENT_NOTICE': '/ndn-k8s/deployment/notice',
+    'DEPLOYMENT_STATUS': '/ndn-k8s/deployment/status'
+}

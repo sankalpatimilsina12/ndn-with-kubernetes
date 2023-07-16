@@ -1,0 +1,139 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ns
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service-1
+  namespace: ns
+spec:
+  selector:
+    app: fw-fs-pod
+  ports:
+    - port: 6363
+      protocol: UDP
+      name: udp
+    - port: 6363
+      protocol: TCP
+      name: tcp
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: router-pod
+  namespace: default
+spec:
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  volumes:
+    - name: hugepage
+      emptyDir:
+        medium: HugePages
+    - name: sys
+      hostPath:
+        path: /sys
+    - name: run-ndn
+      hostPath:
+        path: /run/ndn
+    - name: srv-ndn-fileserver
+      hostPath:
+        path: /srv/ndn-fileserver
+
+  containers:
+    - name: router
+      image: sankalpatimilsina/ndn-dpdk-apr-27:latest
+      imagePullPolicy: Always
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "SYS_ADMIN", "SYS_NICE", "IPC_LOCK"]
+        privileged: true
+      volumeMounts:
+        - mountPath: /dev/hugepages
+          name: hugepage
+        - mountPath: /sys
+          name: sys
+        - mountPath: /run/ndn
+          name: run-ndn
+        - mountPath: /srv/fs
+          name: srv-ndn-fileserver
+      resources:
+        limits:
+          hugepages-1Gi: 10Gi
+          memory: 4Gi
+        requests:
+          hugepages-1Gi: 10Gi
+          memory: 4Gi
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fw-fs-pod
+  namespace: ns
+  labels:
+    app: fw-fs-pod
+spec:
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  volumes:
+    - name: hugepage
+      emptyDir:
+        medium: HugePages
+    - name: sys
+      hostPath:
+        path: /sys
+    - name: run-ndn
+      hostPath:
+        path: /run/ndn
+    - name: srv-ndn-fileserver
+      hostPath:
+        path: /srv/ndn-fileserver
+  containers:
+    - name: fw
+      image: sankalpatimilsina/ndn-dpdk-apr-27:latest
+      command: ["/bin/bash", "-c", "--"]
+      args: ["ndndpdk-svc --gqlserver http://127.0.0.1:3032"]
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "SYS_ADMIN", "SYS_NICE", "IPC_LOCK"]
+        privileged: true
+      volumeMounts:
+        - mountPath: /dev/hugepages
+          name: hugepage
+        - mountPath: /sys
+          name: sys
+        - mountPath: /run/ndn
+          name: run-ndn
+        - mountPath: /srv/fs
+          name: srv-ndn-fileserver
+      resources:
+        limits:
+          hugepages-1Gi: 10Gi
+          memory: 4Gi
+        requests:
+          hugepages-1Gi: 10Gi
+          memory: 4Gi
+
+    - name: fs
+      image: sankalpatimilsina/ndn-dpdk-apr-27:latest
+      command: ["/bin/bash", "-c", "--"]
+      args: ["ndndpdk-svc --gqlserver http://127.0.0.1:3031"]
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "SYS_ADMIN", "SYS_NICE", "IPC_LOCK"]
+        privileged: true
+      volumeMounts:
+        - mountPath: /dev/hugepages
+          name: hugepage
+        - mountPath: /sys
+          name: sys
+        - mountPath: /run/ndn
+          name: run-ndn
+        - mountPath: /srv/fs
+          name: srv-ndn-fileserver

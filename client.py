@@ -3,6 +3,7 @@ import json
 import argparse
 from ndn.app import NDNApp
 from ndn.types import InterestNack, InterestTimeout, InterestCanceled, ValidationFailure
+from ndn.encoding import Name
 
 from config import SUPPORTED_APP_PARAMS, LOGGER
 
@@ -20,19 +21,21 @@ class Client:
 
     async def run(self):
         LOGGER.info('Client started successfully...')
-        LOGGER.info(f'Expressing interest for {self.args.prefix}')
 
+        LOGGER.info(f'Expressing interest for {self.args.request}...')
         app_param = {k: v for k, v in vars(self.args).items()
-                     if k not in ['prefix']}
+                     if k not in ['request']}
 
         try:
-            await self.app.express_interest(
-                self.args.prefix,
+            data_name, meta_info, content = await self.app.express_interest(
+                self.args.request,
                 app_param=json.dumps(app_param).encode(),
+                lifetime=1000,
                 must_be_fresh=True,
-                lifetime=10000,
-                can_be_prefix=True,
+                can_be_prefix=False,
             )
+            LOGGER.info(
+                f'Received data: {(Name.to_str(data_name))}')
         except InterestNack as e:
             LOGGER.error(f'Nacked with reason={e.reason}')
         except InterestTimeout:
@@ -46,8 +49,8 @@ class Client:
 def main():
     parser = argparse.ArgumentParser(
         description='Express NDN interest', prog='python -m client')
-    parser.add_argument('-p', '--prefix', required=True,
-                        help='Interest name prefix')
+    parser.add_argument('-r', '--request', required=True,
+                        help='Interest name')
 
     args, unknown = parser.parse_known_args()
 
