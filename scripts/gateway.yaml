@@ -34,3 +34,15 @@ spec:
         - name: router
           image: sankalpatimilsina/ndn-tools:latest
           imagePullPolicy: IfNotPresent
+          env:
+            - name: CONFIG
+              value: /etc/ndn/nfd.conf
+            - name: LOG_FILE
+              value: /var/log/ndn/nfd.log
+          terminationMessagePath: $(LOG_FILE)
+          command: ["/bin/bash"]
+          args:
+            [
+              "-c",
+              "nfd --config $(CONFIG) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
+            ]

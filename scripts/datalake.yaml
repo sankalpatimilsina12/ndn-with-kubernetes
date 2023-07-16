@@ -17,24 +17,56 @@ spec:
       volumes:
         - name: run-ndn
           hostPath:
-            path: /run/ndn
+            path: /run
+        - name: ndn-log
+          hostPath:
+            path: /var/log/ndn
       containers:
         - name: nfd
           image: sankalpatimilsina/ndn-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
           volumeMounts:
-            - mountPath: /run/ndn
+            - mountPath: /run
               name: run-ndn
+            - mountPath: /var/log/ndn
+              name: ndn-log
+          env:
+            - name: CONFIG
+              value: /etc/ndn/nfd.conf
+            - name: LOG_FILE
+              value: /var/log/ndn/nfd.log
+          terminationMessagePath: $(LOG_FILE)
+          command: ["/bin/bash"]
+          args:
+            [
+              "-c",
+              "nfd --config $(CONFIG) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
+            ]
         - name: ndn6fs
-          image: sankalpatimilsina/ndn6tools:latest
-          imagePullPolicy: IfNotPresent
+          image: sankalpatimilsina/ndn6-tools:latest
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
           volumeMounts:
-            - mountPath: /run/ndn
+            - mountPath: /run
               name: run-ndn
-
+            - mountPath: /var/log/ndn
+              name: ndn-log
+          env:
+            - name: LOG_FILE
+              value: /var/log/ndn/ndn6fs.log
+            - name: FS_PREFIX
+              value: /ndn/k8s/data
+            - name: FS_DIR
+              value: /fileserver_data
+          terminationMessagePath: $(LOG_FILE)
+          command: ["/bin/bash"]
+          args:
+            [
+              "-c",
+              "sleep 5 && ndn6-file-server $(FS_PREFIX) $(FS_DIR) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
+            ]
