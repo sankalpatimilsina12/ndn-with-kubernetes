@@ -19,10 +19,20 @@ else
     echo "Microk8s already installed, skipping..."
 fi
 
+# Setup NFS server
+if ! command -v nfsstat &>/dev/null; then
+    echo "Setting up NFS server..."
+    sudo apt-get install nfs-kernel-server
+    sudo mkdir /workspace
+    sudo chown $USER:$(id -gn) /workspace
+    sudo echo "/workspace *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    sudo exportfs -a
+    sudo systemctl restart nfs-kernel-server
+else
+    echo "NFS server already installed, skipping..."
+fi
+
 # Create deployments
-microk8s kubectl delete -f namespace.yaml --ignore-not-found
-## Release persistent volume claim
-microk8s kubectl patch pv datalake-storage --type json -p '[{"op": "remove", "path": "/spec/claimRef"}]'
 microk8s kubectl apply -f namespace.yaml,pvc.yaml,gateway.yaml,datalake.yaml
 
 # Check if pods are ready
