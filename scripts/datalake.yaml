@@ -1,3 +1,17 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dl-nfd
+  namespace: ndnk8s
+spec:
+  selector:
+    app: dl
+  ports:
+    - port: 6363
+      targetPort: 6363
+      protocol: UDP
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,6 +35,9 @@ spec:
         - name: ndn-log
           hostPath:
             path: /var/log/ndn
+        - name: fileserver-data
+          persistentVolumeClaim:
+            claimName: datalake-storage-claim
       containers:
         - name: nfd
           image: sankalpatimilsina/ndn-tools:latest
@@ -56,6 +73,8 @@ spec:
               name: run-ndn
             - mountPath: /var/log/ndn
               name: ndn-log
+            - mountPath: /fileserver_data
+              name: fileserver-data
           env:
             - name: LOG_FILE
               value: /var/log/ndn/ndn6fs.log

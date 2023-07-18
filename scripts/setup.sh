@@ -21,7 +21,9 @@ fi
 
 # Create deployments
 microk8s kubectl delete -f namespace.yaml --ignore-not-found
-microk8s kubectl apply -f namespace.yaml,gateway.yaml,datalake.yaml
+## Release persistent volume claim
+microk8s kubectl patch pv datalake-storage --type json -p '[{"op": "remove", "path": "/spec/claimRef"}]'
+microk8s kubectl apply -f namespace.yaml,pvc.yaml,gateway.yaml,datalake.yaml
 
 # Check if pods are ready
 deployments=("gw" "dl")
@@ -35,7 +37,7 @@ done
 
 # Register prefixes on gateway deployment
 POD_NAME=$(microk8s kubectl get pods -n ndnk8s -l app=gw --no-headers -o custom-columns=":metadata.name")
-microk8s kubectl exec -n ndnk8s $POD_NAME -- nfdc face create udp://datalake:6363
-microk8s kubectl exec -n ndnk8s $POD_NAME -- nfdc route add /ndn/k8s/data udp://datalake:6363
+microk8s kubectl exec -n ndnk8s $POD_NAME -- nfdc face create remote udp4://dl-nfd.ndnk8s.svc.cluster.local:6363
+microk8s kubectl exec -n ndnk8s $POD_NAME -- nfdc route add prefix /ndn/k8s/data nexthop udp4://dl-nfd.ndnk8s.svc.cluster.local:6363
 
 echo "Setup complete..."
