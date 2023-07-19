@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ndnk8s-dataloader
+spec:
+  template:
+    spec:
+      volumes:
+        - name: fileserver-data
+          persistentVolumeClaim:
+            claimName: datalake-storage-claim
+      containers:
+      - name: ndnk8s-dataloader
+        image: ncbi/sra-tools:latest
+        command: ["/bin/bash", "/dataloader.sh", "/rice.txt", "/kidney.txt"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - mountPath: /fileserver_data
+            name: fileserver-data

@@ -1,0 +1,6 @@
+FROM ncbi/sra-tools:latest
+COPY dataloader.sh /dataloader.sh
+COPY rice.txt /rice.txt
+COPY kidney.txt /kidney.txt
+RUN chmod +x /dataloader.sh
+WORKDIR /workspace
