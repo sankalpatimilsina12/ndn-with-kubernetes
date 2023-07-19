@@ -1,6 +1,6 @@
 : '
 This script is responsible for performing the following tasks:
-1. setting up a microk8s Kubernetes cluster 
+1. setting up a microk8s Kubernetes cluster and NFS server
 2. run NFD on gateway app
 3. run NFD & ndn6-file-server on the datalake app
 4. The gateway app's NFD should have /ndn/k8s/data pointing to the datalake app's NFD
@@ -8,29 +8,8 @@ This script is responsible for performing the following tasks:
 
 #!/bin/bash
 
-# Setup microk8s
-if ! command -v microk8s &>/dev/null; then
-    echo "Setting up microk8s..."
-    sudo snap install microk8s --classic --channel=1.27
-    sudo usermod -a -G microk8s $USER
-    sudo chown -f -R $USER ~/.kube
-    newgrp microk8s
-else
-    echo "Microk8s already installed, skipping..."
-fi
-
-# Setup NFS server
-if ! command -v nfsstat &>/dev/null; then
-    echo "Setting up NFS server..."
-    sudo apt-get install nfs-kernel-server
-    sudo mkdir /workspace
-    sudo chown $USER:$(id -gn) /workspace
-    sudo echo "/workspace *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-    sudo exportfs -a
-    sudo systemctl restart nfs-kernel-server
-else
-    echo "NFS server already installed, skipping..."
-fi
+# Ensure prerequisites are setup
+source ./prerequisites.sh
 
 # Create deployments
 microk8s kubectl apply -f namespace.yaml,pvc.yaml,gateway.yaml,datalake.yaml
