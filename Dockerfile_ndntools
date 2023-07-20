@@ -21,4 +21,3 @@ RUN setcap -r /usr/bin/nfd || true
 
 EXPOSE 6363/tcp
 EXPOSE 6363/udp
-WORKDIR /workspace

@@ -13,5 +13,3 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/ndn
 RUN mkdir -p /fileserver_data
 RUN echo "transport=unix:///run/nfd.sock" > /etc/ndn/client.conf
-
-WORKDIR /workspace
