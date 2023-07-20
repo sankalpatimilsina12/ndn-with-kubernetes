@@ -41,7 +41,7 @@ spec:
       containers:
         - name: nfd
           image: sankalpatimilsina/ndn-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
@@ -64,7 +64,7 @@ spec:
             ]
         - name: ndn6fs
           image: sankalpatimilsina/ndn6-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]

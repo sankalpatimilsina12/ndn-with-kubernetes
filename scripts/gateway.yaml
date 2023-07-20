@@ -33,7 +33,7 @@ spec:
       containers:
         - name: router
           image: sankalpatimilsina/ndn-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: CONFIG
               value: /etc/ndn/nfd.conf

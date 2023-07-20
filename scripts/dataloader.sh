@@ -15,13 +15,18 @@ for file in "$@"; do
     fi
 
     # Derive destination directory name from filename by removing .txt extension
-    dest_dir=$(basename "$file" .txt)
+    dest_dir="/fileserver_data/$(basename "$file" .txt)"
 
-    mkdir -p "$dest_dir"
+    # Check if destination directory already exists
+    if [ -d "$dest_dir" ]; then
+        echo "Destination directory $dest_dir already exists. Skipping..."
+        continue
+    fi
 
     echo "Loading data for $file"
     while IFS= read -r SRA_ID; do
-        echo "Downloading $SRA_ID"
+        echo "Downloading $SRA_ID..."
+        mkdir -p $dest_dir
         prefetch -O $dest_dir $SRA_ID
     done <"$file"
 done
