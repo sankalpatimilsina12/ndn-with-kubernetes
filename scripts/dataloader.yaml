@@ -15,7 +15,7 @@ spec:
         image: sankalpatimilsina/dataloader:latest
         command: ["/bin/bash"]
         args: ["-c", "/dataloader.sh /rice.txt /kidney.txt"]
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         volumeMounts:
           - mountPath: /fileserver_data
             name: fileserver-data

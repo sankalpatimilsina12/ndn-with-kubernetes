@@ -19,7 +19,13 @@ microk8s kubectl apply -f namespace.yaml,pvc.yaml,dataloader.yaml,gateway.yaml,d
 deployments=("gw" "dl")
 for deployment in "${deployments[@]}"; do
     echo "Waiting for pods in $deployment deployment to be ready..."
-    while [[ $(microk8s kubectl get pods -n ndnk8s -l app=$deployment -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
+    while :; do
+        readiness=$(microk8s kubectl get pods -n ndnk8s -l app=$deployment -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}')
+        pod_count=$(echo $readiness | wc -w)
+        ready_count=$(echo $readiness | tr ' ' '\n' | grep -c "True")
+        if [[ $pod_count == $ready_count ]]; then
+            break
+        fi
         sleep 5
     done
     echo "All pods in $deployment deployment are ready..."
