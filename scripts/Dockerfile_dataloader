@@ -1,6 +1,22 @@
+FROM ncbi/edirect:latest AS edirect
 FROM ncbi/sra-tools:latest
 
+# Install libxml2-utils and other dependencies
+RUN apk update && apk add bash libxml2-utils perl perl-io-socket-ssl perl-html-parser perl-libwww perl-xml-simple curl make && \
+    curl -L https://cpanmin.us | perl - App::cpanminus && \
+    cpanm LWP::Protocol::https && \
+    rm -rf /var/cache/apk/* /root/.cpanm/*
+
+# Copy edirect from the first stage
+COPY --from=edirect /usr/local/ncbi/edirect /usr/local/ncbi/edirect
+
+# Add edirect to PATH
+ENV PATH="/usr/local/ncbi/edirect:${PATH}"
+
+# Copy necessary files
 COPY dataloader.sh /dataloader.sh
 COPY rice.txt /rice.txt
 COPY kidney.txt /kidney.txt
+
+# Make dataloader.sh executable
 RUN chmod +x /dataloader.sh
