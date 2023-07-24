@@ -1,0 +1,82 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: gw
+  namespace: ndnk8s
+spec:
+  type: NodePort
+  selector:
+    app: gw
+  ports:
+    - port: 6363
+      targetPort: 6363
+      protocol: UDP
+      nodePort: 30007
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gw
+  namespace: ndnk8s
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gw
+  template:
+    metadata:
+      labels:
+        app: gw
+    spec:
+      volumes:
+        - name: run-ndn
+          hostPath:
+            path: /run
+        - name: ndn-log
+          hostPath:
+            path: /var/log/ndn
+      containers:
+        - name: router
+          image: sankalpatimilsina/ndn-tools:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["SYS_PTRACE"]
+          volumeMounts:
+            - mountPath: /run
+              name: run-ndn
+            - mountPath: /var/log/ndn
+              name: ndn-log
+          env:
+            - name: CONFIG
+              value: /etc/ndn/nfd.conf
+            - name: LOG_FILE
+              value: /var/log/ndn/nfd.log
+          terminationMessagePath: $(LOG_FILE)
+          command: ["/bin/bash"]
+          args:
+            [
+              "-c",
+              "nfd --config $(CONFIG) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
+            ]
+        - name: gateway
+          image: sankalpatimilsina/gateway:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["SYS_PTRACE"]
+          volumeMounts:
+            - mountPath: /run
+              name: run-ndn
+            - mountPath: /var/log/ndn
+              name: ndn-log
+          env:
+            - name: CONFIG
+              value: /etc/ndn/nfd.conf
+            - name: LOG_FILE
+              value: /var/log/ndn/nfd.log
+          terminationMessagePath: $(LOG_FILE)
+          command: ["python3", "/app/gateway.py"]
+

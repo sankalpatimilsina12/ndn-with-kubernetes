@@ -5,7 +5,7 @@ from ndn.app import NDNApp
 from ndn.types import InterestNack, InterestTimeout, InterestCanceled, ValidationFailure
 from ndn.encoding import Name
 
-from config import SUPPORTED_APP_PARAMS, LOGGER
+from docker.gateway.settings import SUPPORTED_APP_PARAMS, LOGGER
 
 
 class Client:

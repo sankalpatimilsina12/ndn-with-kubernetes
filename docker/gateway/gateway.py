@@ -2,7 +2,7 @@ import sys
 from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
 
-from config import LOGGER, GATEWAY_ROUTES
+from .settings import LOGGER, GATEWAY_ROUTES
 
 
 class Gateway:
@@ -17,18 +17,10 @@ class Gateway:
 
     async def _run(self) -> None:
         LOGGER.info('Gateway running...')
-        self.app.route(GATEWAY_ROUTES['DEPLOYMENT_NOTICE'])(
-            self._on_deployment_notice)
-        self.app.route(GATEWAY_ROUTES['DEPLOYMENT_STATUS'])(
-            self._on_deployment_status)
+        self.app.route(GATEWAY_ROUTES['COMPUTE_REQUEST'])(
+            self._on_compute_request)
 
-    def _on_deployment_notice(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
-        # parse interest
-        # create deployment.yaml and apply it to k8s
-        pass
-
-
-    def _on_deployment_status(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
+    def _on_compute_request(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
         pass
 
 

@@ -25,6 +25,7 @@ LOGGER.propagate = False
 
 # PREFIXES
 GATEWAY_ROUTES = {
+    'COMPUTE_REQUEST': '/ndn/k8s/compute',
     'DEPLOYMENT_NOTICE': '/ndn-k8s/deployment/notice',
     'DEPLOYMENT_STATUS': '/ndn-k8s/deployment/status'
 }

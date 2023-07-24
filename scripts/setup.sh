@@ -1,19 +1,23 @@
 : '
 This script is responsible for performing the following tasks:
 1. setting up a microk8s Kubernetes cluster and NFS server
-2. run NFD on gateway app
-3. run NFD & ndn6-file-server on the datalake app
-4. The gateway app"s NFD should have /ndn/k8s/data pointing to the datalake app"s NFD
+2. run NFD & gateway app on gateway deployment
+3. run NFD & ndn6-file-server on the datalake deployment
+4. The gateway app"s NFD should have /ndn/k8s/data pointing to the datalake app"s NFD and
+    /ndn/k8s/compute pointing to the own"s (gateway app"s) NFD
 5. Load NCBI data into the datalake
 '
 
 #!/bin/bash
 
+# Change to current directory
+cd "$(dirname "$0")"
+
 # Ensure prerequisites are setup
 source ./prerequisites.sh
 
 # Create deployments
-microk8s kubectl apply -f namespace.yaml,pvc.yaml,dataloader.yaml,gateway.yaml,datalake.yaml
+microk8s kubectl apply -f ../k8s/namespace.yaml,../k8s/pvc.yaml,../k8s/dataloader.yaml,../k8s/gateway.yaml,../k8s/datalake.yaml
 
 # Check if pods are ready
 deployments=("gw" "dl")
