@@ -37,6 +37,9 @@ spec:
         - name: ndn-log
           hostPath:
             path: /var/log/ndn
+        - name: ndn-config
+          hostPath:
+            path: /root/.ndn
       containers:
         - name: router
           image: sankalpatimilsina/ndn-tools:latest
@@ -49,21 +52,23 @@ spec:
               name: run-ndn
             - mountPath: /var/log/ndn
               name: ndn-log
+            - mountPath: /root/.ndn
+              name: ndn-config
           env:
             - name: CONFIG
               value: /etc/ndn/nfd.conf
             - name: LOG_FILE
               value: /var/log/ndn/nfd.log
-          terminationMessagePath: $(LOG_FILE)
+          terminationMessagePath: /var/log/ndn/nfd.log
           command: ["/bin/bash"]
           args:
             [
               "-c",
               "nfd --config $(CONFIG) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
             ]
-        - name: gateway
-          image: sankalpatimilsina/gateway:latest
-          imagePullPolicy: IfNotPresent
+        - name: gateway-app
+          image: localhost:32000/gateway:registry
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
@@ -72,11 +77,14 @@ spec:
               name: run-ndn
             - mountPath: /var/log/ndn
               name: ndn-log
+            - mountPath: /root/.ndn
+              name: ndn-config
           env:
             - name: CONFIG
               value: /etc/ndn/nfd.conf
             - name: LOG_FILE
               value: /var/log/ndn/nfd.log
-          terminationMessagePath: $(LOG_FILE)
-          command: ["python3", "/app/gateway.py"]
+          terminationMessagePath: /var/log/ndn/nfd.log
+          command: ["/bin/bash", "-c"]
+          args: ["python -m app.gateway"]
 

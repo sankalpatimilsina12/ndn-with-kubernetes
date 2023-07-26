@@ -19,7 +19,7 @@ metadata:
   namespace: ndnk8s
 
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: dl
@@ -55,7 +55,7 @@ spec:
               value: /etc/ndn/nfd.conf
             - name: LOG_FILE
               value: /var/log/ndn/nfd.log
-          terminationMessagePath: $(LOG_FILE)
+          terminationMessagePath: /var/log/ndn/nfd.log
           command: ["/bin/bash"]
           args:
             [
@@ -82,7 +82,7 @@ spec:
               value: /ndn/k8s/data
             - name: FS_DIR
               value: /fileserver_data
-          terminationMessagePath: $(LOG_FILE)
+          terminationMessagePath: /var/log/ndn/ndn6fs.log
           command: ["/bin/bash"]
           args:
             [

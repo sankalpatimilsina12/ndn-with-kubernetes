@@ -1,4 +1,6 @@
 import sys
+import time
+
 from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
 
@@ -7,6 +9,8 @@ from .settings import LOGGER, GATEWAY_ROUTES
 
 class Gateway:
     def __init__(self) -> None:
+        # Wait for NFD to start
+        time.sleep(5)
         self.app = NDNApp()
 
         try:
