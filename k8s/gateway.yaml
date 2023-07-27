@@ -86,5 +86,6 @@ spec:
               value: /var/log/ndn/nfd.log
           terminationMessagePath: /var/log/ndn/nfd.log
           command: ["/bin/bash", "-c"]
-          args: ["python -m app.gateway"]
+          # args: ["python -m app.gateway"]
+          args: ["sleep infinity"]
 

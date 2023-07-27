@@ -5,7 +5,7 @@ from ndn.app import NDNApp
 from ndn.types import InterestNack, InterestTimeout, InterestCanceled, ValidationFailure
 from ndn.encoding import Name
 
-from docker.gateway.settings import SUPPORTED_APP_PARAMS, LOGGER
+from docker.gateway.app.settings import *
 
 
 class Client:
@@ -22,17 +22,17 @@ class Client:
     async def run(self):
         LOGGER.info('Client started successfully...')
 
-        LOGGER.info(f'Expressing interest for {self.args.request}...')
+        LOGGER.info(f'Expressing interest for {self.args.interest}...')
         app_param = {k: v for k, v in vars(self.args).items()
-                     if k not in ['request']}
+                     if k not in ['interest']}
 
         try:
             data_name, meta_info, content = await self.app.express_interest(
-                self.args.request,
-                app_param=json.dumps(app_param).encode(),
+                self.args.interest,
                 lifetime=1000,
                 must_be_fresh=True,
                 can_be_prefix=False,
+                app_param=json.dumps(app_param).encode(),
             )
             LOGGER.info(
                 f'Received data: {(Name.to_str(data_name))}')
@@ -49,18 +49,20 @@ class Client:
 def main():
     parser = argparse.ArgumentParser(
         description='Express NDN interest', prog='python -m client')
-    parser.add_argument('-r', '--request', required=True,
+    parser.add_argument('-i', '--interest', required=True,
                         help='Interest name')
+    parser.add_argument('-a', '--application', required=True,
+                        help='Docker image name to be run')
 
     args, unknown = parser.parse_known_args()
 
-    app_param = {}
+    app_param = SUPPORTED_APP_PARAMS.copy()
     for i in range(0, len(unknown), 2):
         k = unknown[i].lstrip('-')
         v = unknown[i+1]
 
-        if k in SUPPORTED_APP_PARAMS.__members__:
-            app_param[k] = v
+        if k in SUPPORTED_APP_PARAMS:
+            app_param[k] = int(v)
 
     args = argparse.Namespace(**vars(args), **app_param)
     Client(args)

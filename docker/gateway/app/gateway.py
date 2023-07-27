@@ -1,16 +1,31 @@
+'''
+This script is responsible for following sequence of actions:
+
+1. Listen for incoming compute interests
+2. Parse the interest and extract the following information:
+    a. Memory requirement; if not present, default to 2GB
+    b. CPU requirement; if not present, default to 2 core
+    c. Disk requirement; if not present, default to 5GB
+    d. Docker image name; if not present, return error
+3. At this point, all the required information is present
+4. Create a deployment object
+'''
+
+import json
 import sys
 import time
 
 from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
+from ndn.encoding.name import Name
 
-from .settings import LOGGER, GATEWAY_ROUTES
+from .settings import *
 
 
 class Gateway:
     def __init__(self) -> None:
         # Wait for NFD to start
-        time.sleep(5)
+        # time.sleep(5)
         self.app = NDNApp()
 
         try:
@@ -21,11 +36,21 @@ class Gateway:
 
     async def _run(self) -> None:
         LOGGER.info('Gateway running...')
-        self.app.route(GATEWAY_ROUTES['COMPUTE_REQUEST'])(
+        self.app.route(GATEWAY_ROUTES['compute_request'])(
             self._on_compute_request)
 
     def _on_compute_request(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
-        pass
+        LOGGER.info(f'Received interest: {Name.to_str(int_name)}')
+
+        _app_param = json.loads(_app_param.tobytes())
+        print(_app_param)
+
+        self.app.put_data(int_name, b'Hello World', freshness_period=3000)
+
+
+
+
+
 
 
 def main():
