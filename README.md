@@ -20,7 +20,7 @@ to the data lake.
 
 2. /ndn/k8s/compute: This is an interest for compute request. The interest will first be parsed on the gateway node
 to understand the computing requirements. The gateway node will then run a kubernetes job with the specified
-requirements. The client can then poll the gateway node for the result of the computation.
+requirements. The client can then poll the gateway node for results of the computation.
 
 # Sequence Diagram
 ![Sequence Diagram](sequence.png)
