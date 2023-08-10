@@ -1,6 +1,5 @@
 import sys
 import logging
-from enum import Enum
 
 DEBUG = True
 

@@ -18,8 +18,10 @@ import time
 from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
 from ndn.encoding.name import Name
+from kubernetes import client, config
 
 from .settings import *
+from .helpers import *
 
 
 class Gateway:
@@ -45,12 +47,10 @@ class Gateway:
         _app_param = json.loads(_app_param.tobytes())
         print(_app_param)
 
+        # Create a job object
+        job = create_job_object(f'job-{int(time.time())}', _app_param)
+
         self.app.put_data(int_name, b'Hello World', freshness_period=3000)
-
-
-
-
-
 
 
 def main():
