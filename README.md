@@ -17,8 +17,8 @@ as the gateway to the cluster.
 
 4. A Kubernetes deployment for data lake shall be running. This deployment shall run one or more NFDs and file server pods which are attached to PVCs. 
 
-5. The gateway NFD will have prefix registrations for `/ndn/k8s/data` and `/ndn/k8s/compute`. The prefixes will point 
-to the data lake NFDs and compute NFDs respectively.
+5. The gateway NFD will have prefix registrations for `/ndn/k8s/data` pointing to the data lake's NFDs and `/ndn/k8s/compute` which
+is handled by the gateway node itself through Kubernetes jobs.
 
 # Interest Types
 The incoming interest can have one of the following two prefixes:
