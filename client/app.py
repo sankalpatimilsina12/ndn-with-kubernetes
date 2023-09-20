@@ -5,7 +5,7 @@ from ndn.app import NDNApp
 from ndn.types import InterestNack, InterestTimeout, InterestCanceled, ValidationFailure
 from ndn.encoding import Name
 
-from docker.gateway.app.settings import *
+from .settings import *
 
 
 class Client:
@@ -36,6 +36,7 @@ class Client:
             )
             LOGGER.info(
                 f'Received data: {(Name.to_str(data_name))}')
+            print(content.tobytes().decode())
         except InterestNack as e:
             LOGGER.error(f'Nacked with reason={e.reason}')
         except InterestTimeout:
@@ -53,16 +54,13 @@ def main():
                         help='Interest name')
     parser.add_argument('-a', '--application', required=True,
                         help='Docker image name to be run')
-
     args, unknown = parser.parse_known_args()
 
-    app_param = SUPPORTED_APP_PARAMS.copy()
+    app_param = {}
     for i in range(0, len(unknown), 2):
         k = unknown[i].lstrip('-')
         v = unknown[i+1]
-
-        if k in SUPPORTED_APP_PARAMS:
-            app_param[k] = int(v)
+        app_param[k] = v
 
     args = argparse.Namespace(**vars(args), **app_param)
     Client(args)

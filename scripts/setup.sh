@@ -36,6 +36,9 @@ for deployment in "${deployments[@]}"; do
     echo "All pods in $deployment deployment are ready..."
 done
 
+# Wait for NFD to be ready
+sleep 5
+
 # Register prefixes on gateway deployment
 POD_NAME=$(microk8s kubectl get pods -n ndnk8s -l app=gw --no-headers -o custom-columns=":metadata.name")
 microk8s kubectl exec -n ndnk8s $POD_NAME -- nfdc face create remote udp4://dl-nfd.ndnk8s.svc.cluster.local:6363
