@@ -1,11 +1,10 @@
 : '
-This script is responsible for loading NCBI data into PVC. 
-It uses the SRA toolkit"s prefetch command to download the data.
+This script downloads provided SRA IDs from NCBI.
 '
 
 #!/bin/bash
 
-# Usage: ./dataloader.sh <file1> <file2> ...
+# Usage: ./samples.sh <file1> <file2> ...
 
 for file in "$@"; do
     # Check if file exists
@@ -15,7 +14,7 @@ for file in "$@"; do
     fi
 
     echo "Loading data for $file"
-    mapfile -t SRA_IDS < "$file"
+    mapfile -t SRA_IDS <"$file"
 
     for SRA_ID in "${SRA_IDS[@]}"; do
         echo "SRA ID: $SRA_ID"
@@ -48,3 +47,5 @@ for file in "$@"; do
         rm -rf $dest_dir/$SRA_ID
     done
 done
+
+echo "Sample loading complete..."

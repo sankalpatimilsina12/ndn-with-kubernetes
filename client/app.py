@@ -53,7 +53,7 @@ def main():
     parser.add_argument('-i', '--interest', required=True,
                         help='Interest name')
     parser.add_argument('-a', '--application', required=True,
-                        help='Docker image name to be run')
+                        help='Docker image to be run')
     args, unknown = parser.parse_known_args()
 
     app_param = {}

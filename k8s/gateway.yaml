@@ -68,7 +68,7 @@ spec:
             ]
         - name: gateway-app
           image: localhost:32000/gateway:registry
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]

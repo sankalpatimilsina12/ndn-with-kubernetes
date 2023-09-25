@@ -12,10 +12,10 @@ spec:
             claimName: datalake-storage-claim
       containers:
       - name: ndnk8s-dataloader
-        image: sankalpatimilsina/dataloader:latest
+        image: localhost:32000/dataloader:registry
         command: ["/bin/bash"]
-        args: ["-c", "/dataloader.sh /rice.txt /kidney.txt"]
-        imagePullPolicy: IfNotPresent
+        args: ["-c", "/main.sh /rice.txt /kidney.txt"] 
+        imagePullPolicy: Always
         volumeMounts:
           - mountPath: /fileserver_data
             name: fileserver-data
