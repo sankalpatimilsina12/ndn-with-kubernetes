@@ -18,8 +18,7 @@ import time
 from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
 from ndn.encoding.name import Name
-
-from typing import Union, Tuple
+from kubernetes import client, config
 
 from .settings import *
 from .helpers import *
@@ -42,46 +41,35 @@ class Gateway:
         self.app.route(GATEWAY_ROUTES['compute_request'])(
             self._on_compute_request)
 
-    def _extract_app_params(self, _app_param: BinaryStr) -> Tuple[bool, Union[bytes, dict]]:
-        _app_param = json.loads(_app_param.tobytes())
-
-        # Validation
-        if 'mem' in _app_param:
-            try:
-                _app_param['mem'] = int(_app_param['mem'])
-            except ValueError:
-                return False, b'Invalid memory requirement'
-        if 'cpu' in _app_param:
-            try:
-                _app_param['cpu'] = int(_app_param['cpu'])
-            except ValueError:
-                return False, b'Invalid cpu requirement'
-        if 'disk' in _app_param:
-            try:
-                _app_param['disk'] = int(_app_param['disk'])
-            except ValueError:
-                return False, b'Invalid disk requirement'
-        if _app_param['application'] not in SUPPORTED_IMAGES:
-            return False, f'Application `{_app_param["application"]}` not supported. Supported applications: {", ".join(SUPPORTED_IMAGES.keys())}'.encode()
-
-        for k, v in SUPPORTED_APP_PARAMS.items():
-            if k not in _app_param:
-                _app_param[k] = v
-        return True, _app_param
-
     def _on_compute_request(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
         LOGGER.info(f'Received interest: {Name.to_str(int_name)}')
 
-        valid, _app_param = self._extract_app_params(_app_param)
+        valid, _app_param = extract_app_params(_app_param)
         if not valid:
             self.app.put_data(int_name, _app_param, freshness_period=3000)
             return
 
-        # Create a job object
-        job = create_job_object(f'job-{int(time.time())}', _app_param)
+        success, response = create_job_object(
+            f'ndnk8s-job-{int(time.time())}', _app_param)
+        if not success:
+            LOGGER.error(f'Failed to create job: {response}')
+            self.app.put_data(int_name, b'Bad request', freshness_period=3000)
+            return
 
-        # Respond
-        self.app.put_data(int_name, b'Hello World', freshness_period=3000)
+        config.load_incluster_config()
+        instance = client.BatchV1Api()
+        response = instance.create_namespaced_job(
+            body=response, namespace=NAMESPACE)
+        LOGGER.info(f'Job created. status={str(response.status)}')
+
+        sanitized_response = instance.api_client.sanitize_for_serialization(
+            response)
+        response_data = {
+            'message': 'Job created successfully',
+            'name': sanitized_response['metadata']['name'],
+        }
+        return self.app.put_data(int_name, json.dumps(response_data).encode(),
+                                 freshness_period=3000)
 
 
 def main():

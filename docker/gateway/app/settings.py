@@ -4,14 +4,22 @@ import logging
 DEBUG = True
 
 SUPPORTED_APP_PARAMS = {
-    'mem': 2,
-    'cpu': 2,
-    'disk': 5,
+    'mem': '2Gi',
+    'cpu': 2
 }
 
-SUPPORTED_IMAGES = {
-    'blast': 'ncbi/blast'
+SUPPORTED_APPS = {
+    'blast': {
+        'image': 'localhost:32000/gateway:registry',
+        'command': [
+            '/bin/bash',
+            '-c',
+            'magicblast -query /fileserver_data/{sample_experiment}.fastq -db /fileserver_data/GRCh38 -infmt fastq -out /fileserver_data/{sample_experiment}_blast.out'
+        ]
+    }
 }
+
+NAMESPACE = 'ndnk8s'
 
 # LOG
 LOGGER = logging.getLogger('NDN_K8S_GATEWAY')

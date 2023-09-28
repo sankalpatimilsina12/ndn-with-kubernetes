@@ -36,7 +36,7 @@ class Client:
             )
             LOGGER.info(
                 f'Received data: {(Name.to_str(data_name))}')
-            print(content.tobytes().decode())
+            LOGGER.info(content.tobytes().decode())
         except InterestNack as e:
             LOGGER.error(f'Nacked with reason={e.reason}')
         except InterestTimeout:
