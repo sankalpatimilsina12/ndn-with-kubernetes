@@ -1,8 +1,6 @@
 import sys
 import logging
 
-from .validators import blast
-
 DEBUG = True
 
 SUPPORTED_APP_PARAMS = {
@@ -12,13 +10,12 @@ SUPPORTED_APP_PARAMS = {
 
 SUPPORTED_APPS = {
     'blast': {
-        'image': 'localhost:32000/gateway:registry',
+        'image': 'sankalpatimilsina/gateway:latest',
         'command': [
             '/bin/bash',
             '-c',
             'magicblast -query /fileserver_data/{sample_experiment}.fastq -db /fileserver_data/GRCh38 -infmt fastq -out /fileserver_data/{job_name}_blast.gz -gzo'
-        ],
-        'validator': blast.validate
+        ]
     }
 }
 

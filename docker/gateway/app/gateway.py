@@ -29,7 +29,7 @@ from .validators import *
 class Gateway:
     def __init__(self) -> None:
         # Wait for NFD to start
-        # time.sleep(5)
+        time.sleep(5)
         self.app = NDNApp()
 
         try:
@@ -122,22 +122,24 @@ class Gateway:
                 name=_app_param['job_name'], namespace=NAMESPACE)
             sanitized_response = instance.api_client.sanitize_for_serialization(
                 job_status)
+            response_data = {}
             status = sanitized_response['status']
             active_pods = status.get('active', 0)
             succeeded_pods = status.get('succeeded', 0)
             failed_pods = status.get('failed', 0)
             if succeeded_pods > 0:
                 job_state = 'Completed'
+                # Tailored response for BLAST.
+                # TODO: Generalize.
+                response_data[
+                    'message'] = f'Job completed successfully. Result available at /ndn/k8s/data/{_app_param["job_name"]}_blast.gz'
             elif failed_pods > 0:
                 job_state = 'Failed'
             elif active_pods > 0:
                 job_state = 'Running'
             else:
                 job_state = 'Pending'
-            response_data = {
-                'message': f'Job status: {job_state}',
-                'status': status
-            }
+            response_data['status'] = job_state
             return self.app.put_data(int_name, json.dumps(response_data).encode(),
                                      freshness_period=3000)
         except ApiException as e:

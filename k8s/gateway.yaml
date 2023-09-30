@@ -79,7 +79,7 @@ spec:
       containers:
         - name: router
           image: sankalpatimilsina/ndn-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
@@ -103,7 +103,7 @@ spec:
               "nfd --config $(CONFIG) > $(LOG_FILE) 2>&1 & tail -f /dev/null",
             ]
         - name: gateway-app
-          image: localhost:32000/gateway:registry
+          image: sankalpatimilsina/gateway:latest
           imagePullPolicy: Always
           securityContext:
             capabilities:
@@ -124,5 +124,5 @@ spec:
               value: /var/log/ndn/nfd.log
           terminationMessagePath: /var/log/ndn/nfd.log
           command: ["/bin/bash", "-c"]
-          # args: ["python -m app.gateway"]
-          args: ["sleep infinity"]
+          args: ["python -m app.gateway"]
+          # args: ["sleep infinity"]

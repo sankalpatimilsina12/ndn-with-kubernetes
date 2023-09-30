@@ -12,7 +12,7 @@ spec:
             claimName: datalake-storage-claim
       containers:
       - name: ndnk8s-dataloader
-        image: localhost:32000/dataloader:registry
+        image: sankalpatimilsina/dataloader:latest
         command: ["/bin/bash"]
         args: ["-c", "/main.sh /rice.txt /kidney.txt"] 
         imagePullPolicy: Always

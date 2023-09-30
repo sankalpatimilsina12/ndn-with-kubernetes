@@ -19,7 +19,7 @@ metadata:
   namespace: ndnk8s
 
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: dl
@@ -64,7 +64,7 @@ spec:
             ]
         - name: ndn6fs
           image: sankalpatimilsina/ndn6-tools:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             capabilities:
               add: ["SYS_PTRACE"]
