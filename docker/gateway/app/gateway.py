@@ -19,9 +19,11 @@ from ndn.app import NDNApp
 from ndn.types import FormalName, InterestParam, BinaryStr
 from ndn.encoding.name import Name
 from kubernetes import client, config
+from kubernetes.client.exceptions import ApiException
 
 from .settings import *
 from .helpers import *
+from .validators import *
 
 
 class Gateway:
@@ -40,17 +42,50 @@ class Gateway:
         LOGGER.info('Gateway running...')
         self.app.route(GATEWAY_ROUTES['compute_request'])(
             self._on_compute_request)
+        self.app.route(GATEWAY_ROUTES['compute_status'])(
+            self._on_compute_status)
 
     def _on_compute_request(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
         LOGGER.info(f'Received interest: {Name.to_str(int_name)}')
 
-        valid, _app_param = extract_app_params(_app_param)
-        if not valid:
-            self.app.put_data(int_name, _app_param, freshness_period=3000)
+        _app_param = json.loads(_app_param.tobytes())
+        # Generic job validation
+        if 'mem' in _app_param:
+            try:
+                _app_param['mem'] = int(_app_param['mem'])
+            except ValueError:
+                self.app.put_data(
+                    int_name, b'Invalid memory requirement', freshness_period=3000)
+                return
+        if 'cpu' in _app_param:
+            try:
+                _app_param['cpu'] = int(_app_param['cpu'])
+            except ValueError:
+                self.app.put_data(
+                    int_name, b'Invalid cpu requirement', freshness_period=3000)
+                return
+        # if 'disk' in _app_param:
+        #     try:
+        #         _app_param['disk'] = int(_app_param['disk'])
+        #     except ValueError:
+                #   self.app.put_data(int_name, b'Invalid disk requirement', freshness_period=3000)
+                #   return
+        if 'application' not in _app_param:
+            self.app.put_data(
+                int_name, b'`application` is required', freshness_period=3000)
             return
 
-        success, response = create_job_object(
-            f'ndnk8s-job-{int(time.time())}', _app_param)
+        # Application specific validation
+        is_valid, error = validate_request(
+            _app_param['application'], _app_param)
+        if not is_valid:
+            self.app.put_data(int_name, error.encode(), freshness_period=3000)
+            return False, error
+
+        _app_param = prepare_app_params(_app_param)
+        # Job name
+        _app_param['job_name'] = f'ndnk8s-job-{int(time.time())}'
+        success, response = create_job_object(_app_param)
         if not success:
             LOGGER.error(f'Failed to create job: {response}')
             self.app.put_data(int_name, b'Bad request', freshness_period=3000)
@@ -70,6 +105,51 @@ class Gateway:
         }
         return self.app.put_data(int_name, json.dumps(response_data).encode(),
                                  freshness_period=3000)
+
+    def _on_compute_status(self, int_name: FormalName, _int_param: InterestParam, _app_param: BinaryStr):
+        LOGGER.info(f'Received interest: {Name.to_str(int_name)}')
+
+        _app_param = json.loads(_app_param.tobytes())
+        if 'job_name' not in _app_param:
+            self.app.put_data(
+                int_name, b'`job_name` is required for status request', freshness_period=3000)
+            return
+
+        config.load_incluster_config()
+        instance = client.BatchV1Api()
+        try:
+            job_status = instance.read_namespaced_job_status(
+                name=_app_param['job_name'], namespace=NAMESPACE)
+            sanitized_response = instance.api_client.sanitize_for_serialization(
+                job_status)
+            status = sanitized_response['status']
+            active_pods = status.get('active', 0)
+            succeeded_pods = status.get('succeeded', 0)
+            failed_pods = status.get('failed', 0)
+            if succeeded_pods > 0:
+                job_state = 'Completed'
+            elif failed_pods > 0:
+                job_state = 'Failed'
+            elif active_pods > 0:
+                job_state = 'Running'
+            else:
+                job_state = 'Pending'
+            response_data = {
+                'message': f'Job status: {job_state}',
+                'status': status
+            }
+            return self.app.put_data(int_name, json.dumps(response_data).encode(),
+                                     freshness_period=3000)
+        except ApiException as e:
+            if e.status == 404:
+                LOGGER.error(f'Job {_app_param["job_name"]} not found: {e}')
+                return self.app.put_data(int_name, b'Job not found', freshness_period=3000)
+            else:
+                LOGGER.error(f'Failed to get job status: {e}')
+                return self.app.put_data(int_name, b'Server error', freshness_period=3000)
+        except Exception as e:
+            LOGGER.error(f'Failed to get job status: {e}')
+            return self.app.put_data(int_name, b'Server error', freshness_period=3000)
 
 
 def main():

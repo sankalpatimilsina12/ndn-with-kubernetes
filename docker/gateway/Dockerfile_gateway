@@ -16,7 +16,7 @@ ENV LD_LIBRARY_PATH="/blast/lib:${LD_LIBRARY_PATH}"
 
 RUN apt-get -y -qq update
 RUN apt-get -y -qq --no-install-recommends install git build-essential nano \
-    curl vim wget iperf3 traceroute iputils-ping ca-certificates gnupg2 \
+    curl vim wget iperf3 traceroute iputils-ping ca-certificates gnupg2 libxml2 \
     python3.8 python3-pip python3-venv
 
 # Create virtual environment and activate

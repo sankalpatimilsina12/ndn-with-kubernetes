@@ -1,14 +1,13 @@
 from typing import Tuple, Union
 
-from . import blast
+from ..settings import SUPPORTED_APPS
 
 
-def validate_application_params(application: str, job_params: dict) -> Tuple[bool, Union[str, None]]:
-    validators = {
-        'blast': blast.validate
-    }
-
-    if application in validators:
-        return validators[application](job_params)
+def validate_request(application: str, job_params: dict) -> Tuple[bool, Union[str, None]]:
+    if application in SUPPORTED_APPS:
+        if 'validator' in SUPPORTED_APPS[application]:
+            return SUPPORTED_APPS[application]['validator'](job_params)
+        else:
+            return True, None
     else:
-        return False, b'Unsupported application'
+        return False, f'Application `{application}` not supported. Supported applications: {", ".join(SUPPORTED_APPS.keys())}'

@@ -1,10 +1,12 @@
 import sys
 import logging
 
+from .validators import blast
+
 DEBUG = True
 
 SUPPORTED_APP_PARAMS = {
-    'mem': '2Gi',
+    'mem': '4Gi',
     'cpu': 2
 }
 
@@ -14,8 +16,9 @@ SUPPORTED_APPS = {
         'command': [
             '/bin/bash',
             '-c',
-            'magicblast -query /fileserver_data/{sample_experiment}.fastq -db /fileserver_data/GRCh38 -infmt fastq -out /fileserver_data/{sample_experiment}_blast.out'
-        ]
+            'magicblast -query /fileserver_data/{sample_experiment}.fastq -db /fileserver_data/GRCh38 -infmt fastq -out /fileserver_data/{job_name}_blast.gz -gzo'
+        ],
+        'validator': blast.validate
     }
 }
 
@@ -35,6 +38,5 @@ LOGGER.propagate = False
 # PREFIXES
 GATEWAY_ROUTES = {
     'compute_request': '/ndn/k8s/compute',
-    'deployment_notice': '/ndn-k8s/deployment/notice',
-    'deployment_status': '/ndn-k8s/deployment/status'
+    'compute_status': '/ndn/k8s/compute/status'
 }

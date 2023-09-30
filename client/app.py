@@ -52,17 +52,21 @@ def main():
         description='Express NDN interest', prog='python -m client')
     parser.add_argument('-i', '--interest', required=True,
                         help='Interest name')
-    parser.add_argument('-a', '--application', required=True,
-                        help='Docker image to be run')
-    args, unknown = parser.parse_known_args()
+    parser.add_argument('-a', '--application', required=False,
+                        help='Application name')
+    parser.add_argument('-jn', '--job_name', required=False,
+                        help='Job name')
+    parser.add_argument('-s', '--sample_experiment', required=False,
+                        help='Sample experiment name')
+    parser.add_argument('-m', '--mem', required=False,
+                        help='Memory requirement')
+    parser.add_argument('-c', '--cpu', required=False,
+                        help='CPU requirement')
+    args = parser.parse_args()
 
-    app_param = {}
-    for i in range(0, len(unknown), 2):
-        k = unknown[i].lstrip('-')
-        v = unknown[i+1]
-        app_param[k] = v
-
-    args = argparse.Namespace(**vars(args), **app_param)
+    # Filter out None values
+    valid_args = {k: v for k, v in vars(args).items() if v is not None}
+    args = argparse.Namespace(**valid_args)
     Client(args)
 
 
