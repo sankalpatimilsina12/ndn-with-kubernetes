@@ -1,22 +1,30 @@
 FROM ncbi/edirect:latest AS edirect
-FROM ncbi/sra-tools:latest
+FROM ncbi/sra-tools:latest AS sra-tools
+FROM ncbi/blast:latest AS blast
 
-# Install libxml2-utils and other dependencies
-RUN apk update && apk add bash libxml2-utils perl perl-io-socket-ssl perl-html-parser perl-libwww perl-xml-simple curl make && \
-    curl -L https://cpanmin.us | perl - App::cpanminus && \
-    cpanm LWP::Protocol::https && \
-    rm -rf /var/cache/apk/* /root/.cpanm/*
+# Final stage: Base image as Ubuntu 20.04
+FROM ubuntu:20.04
 
-# Copy edirect from the first stage
+ENV DEBIAN_FRONTEND=noninteractive
+
 COPY --from=edirect /usr/local/ncbi/edirect /usr/local/ncbi/edirect
+COPY --from=sra-tools /usr/local/bin /usr/local/bin
+COPY --from=sra-tools /lib /lib
+COPY --from=blast /blast/bin /blast/bin
+COPY --from=blast /blast/lib /blast/lib
 
-# Add edirect to PATH
-ENV PATH="/usr/local/ncbi/edirect:${PATH}"
+ENV PATH="/blast/bin:/usr/local/ncbi/edirect:${PATH}"
+ENV LD_LIBRARY_PATH="/blast/lib:${LD_LIBRARY_PATH}"
 
-# Copy necessary files
-COPY dataloader.sh /dataloader.sh
+RUN apt-get -y -qq update
+RUN apt-get -y -qq --no-install-recommends install bash libxml2-utils perl libio-socket-ssl-perl libhtml-parser-perl libwww-perl libxml-simple-perl curl gzip make libgomp1 liblmdb0 cpanminus && \
+    cpanm LWP::Protocol::https && \
+    rm -rf /var/lib/apt/lists/* /root/.cpanm/*
+
+COPY main.sh /main.sh
+COPY samples.sh /samples.sh
+COPY db.sh /db.sh
 COPY rice.txt /rice.txt
 COPY kidney.txt /kidney.txt
 
-# Make dataloader.sh executable
-RUN chmod +x /dataloader.sh
+RUN chmod +x /main.sh /samples.sh /db.sh

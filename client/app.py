@@ -5,7 +5,7 @@ from ndn.app import NDNApp
 from ndn.types import InterestNack, InterestTimeout, InterestCanceled, ValidationFailure
 from ndn.encoding import Name
 
-from docker.gateway.app.settings import *
+from .settings import *
 
 
 class Client:
@@ -36,6 +36,7 @@ class Client:
             )
             LOGGER.info(
                 f'Received data: {(Name.to_str(data_name))}')
+            LOGGER.info(content.tobytes().decode())
         except InterestNack as e:
             LOGGER.error(f'Nacked with reason={e.reason}')
         except InterestTimeout:
@@ -51,20 +52,21 @@ def main():
         description='Express NDN interest', prog='python -m client')
     parser.add_argument('-i', '--interest', required=True,
                         help='Interest name')
-    parser.add_argument('-a', '--application', required=True,
-                        help='Docker image name to be run')
+    parser.add_argument('-a', '--application', required=False,
+                        help='Application name')
+    parser.add_argument('-jn', '--job_name', required=False,
+                        help='Job name')
+    parser.add_argument('-s', '--sample_experiment', required=False,
+                        help='Sample experiment name')
+    parser.add_argument('-m', '--mem', required=False,
+                        help='Memory requirement')
+    parser.add_argument('-c', '--cpu', required=False,
+                        help='CPU requirement')
+    args = parser.parse_args()
 
-    args, unknown = parser.parse_known_args()
-
-    app_param = SUPPORTED_APP_PARAMS.copy()
-    for i in range(0, len(unknown), 2):
-        k = unknown[i].lstrip('-')
-        v = unknown[i+1]
-
-        if k in SUPPORTED_APP_PARAMS:
-            app_param[k] = int(v)
-
-    args = argparse.Namespace(**vars(args), **app_param)
+    # Filter out None values
+    valid_args = {k: v for k, v in vars(args).items() if v is not None}
+    args = argparse.Namespace(**valid_args)
     Client(args)
 
 

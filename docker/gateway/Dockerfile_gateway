@@ -1,10 +1,22 @@
+FROM ncbi/sra-tools:latest AS sra-tools
+FROM ncbi/magicblast:latest AS magicblast
+
+# Final stage: Base image as Ubuntu 20.04
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+COPY --from=sra-tools /usr/local/bin /usr/local/bin
+COPY --from=sra-tools /lib /lib
+COPY --from=magicblast /blast/bin /blast/bin
+COPY --from=magicblast /blast/lib /blast/lib
+
+ENV PATH="/blast/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/blast/lib:${LD_LIBRARY_PATH}"
+
 RUN apt-get -y -qq update
 RUN apt-get -y -qq --no-install-recommends install git build-essential nano \
-    curl vim wget iperf3 traceroute iputils-ping ca-certificates gnupg2 \
+    curl vim wget iperf3 traceroute iputils-ping ca-certificates gnupg2 libxml2 \
     python3.8 python3-pip python3-venv
 
 # Create virtual environment and activate

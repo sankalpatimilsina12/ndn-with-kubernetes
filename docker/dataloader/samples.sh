@@ -1,11 +1,10 @@
 : '
-This script is responsible for loading NCBI data into PVC. 
-It uses the SRA toolkit"s prefetch command to download the data.
+This script downloads provided SRA IDs from NCBI.
 '
 
 #!/bin/bash
 
-# Usage: ./dataloader.sh <file1> <file2> ...
+# Usage: ./samples.sh <file1> <file2> ...
 
 for file in "$@"; do
     # Check if file exists
@@ -15,7 +14,7 @@ for file in "$@"; do
     fi
 
     echo "Loading data for $file"
-    mapfile -t SRA_IDS < "$file"
+    mapfile -t SRA_IDS <"$file"
 
     for SRA_ID in "${SRA_IDS[@]}"; do
         echo "SRA ID: $SRA_ID"
@@ -43,8 +42,31 @@ for file in "$@"; do
 
         echo "Downloading $SRA_ID to $dest_dir..."
         mkdir -p $dest_dir
+        # Check for already downloaded file
+        if ls "$dest_dir/$SRA_ID.sra"* 1> /dev/null 2>&1; then
+            echo "$SRA_ID already downloaded. Skipping download..."
+            continue
+        fi
         prefetch -O $dest_dir $SRA_ID
-        mv $dest_dir/$SRA_ID/*.sralite $dest_dir
+        # Check if prefetch was successful
+        if [ $? -ne 0 ]; then
+            echo "Prefetch for $SRA_ID failed. Skipping further steps..."
+            continue
+        fi
+        # Check if any .sra or .sralite file was actually downloaded
+        if [ -z "$(ls $dest_dir/$SRA_ID/*.sra* 2>/dev/null)" ]; then
+            echo "No .sra files found for $SRA_ID after prefetch. Skipping further steps..."
+            continue
+        fi
+        # Move the sra and sralite files from the SRA_ID directory to the dest_dir
+        mv $dest_dir/$SRA_ID/*.sra* $dest_dir
+        # Remove the now empty SRA_ID directory
         rm -rf $dest_dir/$SRA_ID
+
+        # Run fastq-dump on the SRA file for BLAST
+        echo "Running fastq-dump on $SRA_ID for BLAST..."
+        fastq-dump $dest_dir/$SRA_ID.sra* -O /fileserver_data/
     done
 done
+
+echo "Sample loading complete..."

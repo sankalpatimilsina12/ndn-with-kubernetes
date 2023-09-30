@@ -4,7 +4,7 @@ metadata:
   name: datalake-storage
 spec:
   capacity:
-    storage: 5Gi
+    storage: 20Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
@@ -25,4 +25,4 @@ spec:
   storageClassName: datalake-storage
   resources:
     requests:
-      storage: 3Gi
+      storage: 20Gi
